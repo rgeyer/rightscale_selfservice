@@ -21,4 +21,4 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "..", "lib", "rightscale_selfservice"))
 
-RightScaleSelfService::Cli.start(ARGV)
+RightScaleSelfService::Cli::Main.start(ARGV)

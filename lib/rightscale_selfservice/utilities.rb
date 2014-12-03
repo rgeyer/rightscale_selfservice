@@ -16,12 +16,3 @@
 # COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-module RightScaleSelfService
-  module Cli
-    class Main < Thor
-      desc "template", "Self Service Template Commands"
-      subcommand "template", Template
-    end
-  end
-end
