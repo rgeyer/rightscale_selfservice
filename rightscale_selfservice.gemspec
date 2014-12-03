@@ -11,6 +11,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency("thor", "~> 0.19.1")
   gem.add_dependency("rest-client", "~> 1.7.0")
+  gem.add_dependency("logger-better", "~> 0.1.0")
 
   gem.files = Dir.glob("{lib,bin}/**/*") + ["LICENSE", "README.md"]
 end

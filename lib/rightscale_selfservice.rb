@@ -18,5 +18,6 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 require 'thor'
+require 'logger-better'
 glob_path = File.expand_path(File.join(File.dirname(__FILE__), 'rightscale_selfservice')) + '/**/*.rb'
 Dir.glob(glob_path, &method(:require))

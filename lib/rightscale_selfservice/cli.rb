@@ -18,7 +18,15 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 module RightScaleSelfService
-  class Cli < Thor
+  class Template < Thor
+    desc "compile", "Uploads a CAT to SS, validating the syntax. Will report errors if any are found"
+    def compile()
 
+    end
+  end
+
+  class Cli < Thor
+    desc "template", "Self Service Template Commands"
+    subcommand "template", Template
   end
 end
