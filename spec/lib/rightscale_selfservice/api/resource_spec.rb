@@ -86,6 +86,26 @@ describe RightScaleSelfService::Api::Resource do
       end
     end
 
+    context "one of the request params is a file" do
+      it "doesn't url encode anything" do
+        file = Tempfile.new("foo")
+        client = get_mock_client_for_interface()
+        client.should_receive(:account_id).and_return("12345")
+        service = flexmock(:name => "foo", :version => "1.0", :client => client, :base_url => "http://ss")
+        client.should_receive(:get_authorized_rest_client_request)
+          .once
+          .with(
+            FlexMock.hsh(
+              :method => :get,
+              :url => "http://ss/foo/12345/foo/action",
+              :payload => {:bar => file, :baz => "foo"}
+            )
+          ).and_return(flexmock(:execute => ""))
+        api_resource = RightScaleSelfService::Api::Resource.new("foo", service)
+        api_resource.account_id({:bar => file, :baz => "foo"}, true)
+      end
+    end
+
     it "replaces all the correct tokens with account id" do
       client = get_mock_client_for_interface()
       client.should_receive(:account_id).and_return("12345")
@@ -114,6 +134,5 @@ describe RightScaleSelfService::Api::Resource do
       api_resource = RightScaleSelfService::Api::Resource.new("foo", service)
       api_resource.account_id
     end
-
   end
 end

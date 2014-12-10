@@ -40,6 +40,41 @@ module RightScaleSelfService
         client = get_api_client()
         client.designer.template.compile(:source => result)
       end
+
+      desc "upsert <filepath>", "Upload <filepath> to SS as a new template or updates an existing one (based on name)"
+      def upsert(filepath)source_filepath = File.expand_path(filepath, Dir.pwd)
+        source_filename = File.basename(source_filepath)
+        source_dir = File.dirname(source_filepath)
+        template = RightScaleSelfService::Utilities::Template.preprocess(source_filepath)
+        client = get_api_client()
+
+        matches = template.match(/^name\s*"(?<name>.*)"/)
+        tmp_file = matches["name"].gsub("/","-").gsub(" ","-")
+        name = matches["name"]
+
+        templates = JSON.parse(client.designer.template.index.body)
+        existing_templates = templates.select{|t| t["name"] == name }
+
+        tmpfile = Tempfile.new([tmp_file,".cat.rb"])
+        begin
+          tmpfile.write(template)
+          tmpfile.rewind
+          if existing_templates.length != 0
+            template_id = existing_templates.first()["id"]
+            request = client.designer.template.update({:id => template_id, :source => tmpfile}, true)
+            response = request.execute
+          else
+            response = client.designer.template.create({:source => tmpfile})
+            template_href = response.headers[:location]
+          end
+        rescue RestClient::ExceptionWithResponse => e
+          puts "Failed to compile template"
+          errors = JSON.parse(e.http_body)
+          puts JSON.pretty_generate(errors).gsub('\n',"\n")
+        ensure
+          tmpfile.close!()
+        end
+      end
     end
   end
 end

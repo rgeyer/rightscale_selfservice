@@ -56,7 +56,15 @@ module RightScaleSelfService
           end
 
           if args[0].length > 0
-            params[:payload] = URI.encode_www_form(args[0])
+            # Detect if a param is a file, using the same mechanism as
+            # rest-client
+            #
+            # https://github.com/rest-client/rest-client/blob/master/lib/restclient/payload.rb#L33
+            if args[0].select{|k,v| v.respond_to?(:path) && v.respond_to?(:read) }.length > 0
+              params[:payload] = args[0]
+            else
+              params[:payload] = URI.encode_www_form(args[0])
+            end
           end
         end
 
