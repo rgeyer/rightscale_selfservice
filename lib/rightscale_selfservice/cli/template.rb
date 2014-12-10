@@ -27,8 +27,12 @@ module RightScaleSelfService
         source_filename = File.basename(source_filepath)
         source_dir = File.dirname(source_filepath)
         dest_filepath = @options.has_key?('o') ? File.expand_path(@options['o'], Dir.pwd) : File.join(source_dir, "processed-#{source_filename}")
+
+        logger.info("Preprocessing #{source_filepath} and writing result to #{dest_filepath}")
+
         result = RightScaleSelfService::Utilities::Template.preprocess(source_filepath)
         File.open(dest_filepath, 'w') {|f| f.write(result)}
+        logger.info("Done! Find your file at #{dest_filepath}")
       end
 
       desc "compile <filepath>", "Uploads <filepath> to SS, validating the syntax. Will report errors if any are found."
@@ -38,7 +42,15 @@ module RightScaleSelfService
         source_dir = File.dirname(source_filepath)
         result = RightScaleSelfService::Utilities::Template.preprocess(source_filepath)
         client = get_api_client()
-        client.designer.template.compile(:source => result)
+        logger.info("Uploading #{source_filepath} to validate syntax")
+        begin
+          client.designer.template.compile(:source => result)
+          logger.info("#{source_filepath} compiled successfully!")
+        rescue RestClient::ExceptionWithResponse => e
+          shell = Thor::Shell::Color.new
+          message = "Failed to compile template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+          logger.error(shell.set_color message, :red)
+        end
       end
 
       desc "upsert <filepath>", "Upload <filepath> to SS as a new template or updates an existing one (based on name)"
@@ -70,9 +82,9 @@ module RightScaleSelfService
             template_href = response.headers[:location]
           end
         rescue RestClient::ExceptionWithResponse => e
-          puts "Failed to compile template"
-          errors = JSON.parse(e.http_body)
-          puts JSON.pretty_generate(errors).gsub('\n',"\n")
+          shell = Thor::Shell::Color.new
+          message = "Failed to update or create template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+          logger.error(shell.set_color message, :red)
         ensure
           tmpfile.close!()
         end

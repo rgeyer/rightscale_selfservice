@@ -21,15 +21,20 @@ require 'rest-client'
 
 module RightScaleSelfService
   module Api
-    # @attr [String] selfservice_url URL to use for Self Service API requests.
-    #   I.E. https://selfservice-4.rightscale.com
-    # @attr [String] api_url URL to use for Cloud Management API requests. Only
-    #   used once to authenticate.
-    # @attr [Logger] logger A logger which will be used, mostly for debug
-    #   purposes
-    # @attr [String] account_id A RightScale account id
-    # @attr_reader [Hash] interface A hash containing details about the
-    #   services, resources, and actions available in this client.
+    # @!attribute [rw] selfservice_url
+    #   @return [String] URL to use for Self Service API requests.
+    #     I.E. https://selfservice-4.rightscale.com
+    # @!attribute [rw] api_url
+    #   @return [String] URL to use for Cloud Management API requests. Only
+    #     used once to authenticate.
+    # @!attribute [rw] logger
+    #   @return [Logger] A logger which will be used, mostly for debug
+    #     purposes
+    # @!attribute [rw] account_id
+    #   @return [String] A RightScale account id
+    # @!attribute [r] interface
+    #   @return [Hash] interface A hash containing details about the services,
+    #     resources, and actions available in this client.
     class Client
 
       # A list of tokens which might appear in hrefs which need to be replaced
@@ -232,6 +237,29 @@ module RightScaleSelfService
       def get_relative_href(url)
         url.gsub!(@selfservice_url,"")
       end
+
+      # Accepts various possible responses and formats it into useful error text
+      #
+      # @param [RestClient::ExceptionWithResponse] error The response or error
+      #   to format
+      def self.format_error(error)
+        formatted_text = ""
+        if error
+          if error.is_a?(RestClient::ExceptionWithResponse)
+            if error.response.headers[:content_type] == "application/json"
+              formatted_text = JSON.pretty_generate(
+                JSON.parse(error.response.body)
+              ).gsub('\n',"\n")
+            else
+              formatted_text = error.response.body
+            end
+          end
+        else
+          formatted_text = "Nothing supplied for formatting"
+        end
+        formatted_text
+      end
+
     end
   end
 end

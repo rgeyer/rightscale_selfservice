@@ -287,4 +287,27 @@ describe RightScaleSelfService::Api::Client do
     end
   end
 
+  describe "#format_error" do
+    context "RestClient::ExceptionWithResponse with json body" do
+      it "knows how to format it" do
+        pending("I figure out how to properly mock the RestClient Exception and Response")
+        fail
+      end
+    end
+
+    context "RestClient::ExceptionWithResponse with string body" do
+      it "knows how to format it" do
+        pending("I figure out how to properly mock the RestClient Exception and Response")
+        fail
+      end
+    end
+
+    context "null" do
+      it "returns a nice error message" do
+        error_text = RightScaleSelfService::Api::Client.format_error(nil)
+        expect(error_text).to match "Nothing supplied for formatting"
+      end
+    end
+  end
+
 end

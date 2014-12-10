@@ -46,6 +46,10 @@ EOF
 
           RightScaleSelfService::Api::Client.new(client_auth_params)
         end
+
+        def logger()
+          Logger.new(STDOUT)
+        end
       }
     end
   end
