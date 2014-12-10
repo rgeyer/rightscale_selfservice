@@ -17,11 +17,29 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-module RightScaleSelfService
-  module Cli
-    class Main < Thor
-      desc "template", "Self Service Template Commands"
-      subcommand "template", Template
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', 'helper'))
+
+describe RightScaleSelfService::Api::Service do
+  describe "#method_missing" do
+    context "called more than once" do
+      it "jit initializes the resource & caches it" do
+        client = get_mock_client_for_interface()
+        service = RightScaleSelfService::Api::Service.new("foo", "1.0", "https://ss", client)
+        resource_one = service.bar
+        resource_two = service.bar
+        expect(resource_one).to be_a RightScaleSelfService::Api::Resource
+        expect(resource_two).to be_a RightScaleSelfService::Api::Resource
+        expect(resource_one).to equal resource_two
+      end
+    end
+
+    context "invalid resource supplied" do
+      it "raises" do
+        client = get_mock_client_for_interface()
+        service = RightScaleSelfService::Api::Service.new("foo", "1.0", "https://ss", client)
+        expect { service.barbaz }.to raise_error("No resource named \"barbaz\" was found in version \"1.0\" of service \"foo\". Available resources are [foo,bar,baz]")
+      end
     end
   end
+
 end

@@ -19,7 +19,7 @@
 
 module RightScaleSelfService
   module Cli
-    class Template < Thor
+    class Template < Base
       desc "preprocess <filepath>", "Processes <filepath>, #include:/path/to/file statements with file contents. Will create a new file in the same location prefixed with 'processed-', or in the location specified by -o"
       option :o, :banner => "<output filepath>"
       def preprocess(filepath)
@@ -31,9 +31,14 @@ module RightScaleSelfService
         File.open(dest_filepath, 'w') {|f| f.write(result)}
       end
 
-      desc "compile", "Uploads a CAT to SS, validating the syntax. Will report errors if any are found"
-      def compile()
-        raise "HAHA! Not implemented yet! :p"
+      desc "compile <filepath>", "Uploads <filepath> to SS, validating the syntax. Will report errors if any are found."
+      def compile(filepath)
+        source_filepath = File.expand_path(filepath, Dir.pwd)
+        source_filename = File.basename(source_filepath)
+        source_dir = File.dirname(source_filepath)
+        result = RightScaleSelfService::Utilities::Template.preprocess(source_filepath)
+        client = get_api_client()
+        client.designer.template.compile(:source => result)
       end
     end
   end
