@@ -270,4 +270,21 @@ describe RightScaleSelfService::Api::Client do
     end
   end
 
+  describe "#get_relative_href" do
+    context "provided a full url with protocol and hostname" do
+      it "returns the expected relative href" do
+        requestmock = flexmock(:execute => "")
+        flexmock(RestClient::Request).should_receive(:new).and_return(requestmock)
+        client = RightScaleSelfService::Api::Client.new(
+          :access_token => "token",
+          :account_id => "12345",
+          :selfservice_url => "https://ss",
+          :api_url => "https://cm"
+        )
+        relative_href = client.get_relative_href("https://ss/api/service/12345/foo/12345")
+        expect(relative_href).to match "/api/service/12345/foo/12345"
+      end
+    end
+  end
+
 end

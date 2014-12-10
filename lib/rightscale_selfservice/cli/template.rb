@@ -42,7 +42,8 @@ module RightScaleSelfService
       end
 
       desc "upsert <filepath>", "Upload <filepath> to SS as a new template or updates an existing one (based on name)"
-      def upsert(filepath)source_filepath = File.expand_path(filepath, Dir.pwd)
+      def upsert(filepath)
+        source_filepath = File.expand_path(filepath, Dir.pwd)
         source_filename = File.basename(source_filepath)
         source_dir = File.dirname(source_filepath)
         template = RightScaleSelfService::Utilities::Template.preprocess(source_filepath)
@@ -63,6 +64,7 @@ module RightScaleSelfService
             template_id = existing_templates.first()["id"]
             request = client.designer.template.update({:id => template_id, :source => tmpfile}, true)
             response = request.execute
+            template_href = client.get_relative_href(request.url)
           else
             response = client.designer.template.create({:source => tmpfile})
             template_href = response.headers[:location]

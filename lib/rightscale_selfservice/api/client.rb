@@ -183,6 +183,10 @@ module RightScaleSelfService
           @services[service_hash_key] = service
         end
       end
+
+      def get_relative_href(url)
+        url.gsub!(@selfservice_url,"")
+      end
     end
   end
 end
