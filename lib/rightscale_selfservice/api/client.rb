@@ -21,8 +21,22 @@ require 'rest-client'
 
 module RightScaleSelfService
   module Api
+    # @attr [String] selfservice_url URL to use for Self Service API requests.
+    #   I.E. https://selfservice-4.rightscale.com
+    # @attr [String] api_url URL to use for Cloud Management API requests. Only
+    #   used once to authenticate.
+    # @attr [Logger] logger A logger which will be used, mostly for debug
+    #   purposes
+    # @attr [String] account_id A RightScale account id
+    # @attr_reader [Hash] interface A hash containing details about the
+    #   services, resources, and actions available in this client.
     class Client
 
+      # A list of tokens which might appear in hrefs which need to be replaced
+      # with the RightScale account_id.  This will likely change over time and
+      # some of these will likely go away or change meaning
+      #
+      # @return [Array<String>]
       def self.get_known_account_id_tokens
         [":account_id",":catalog_id",":collection_id",":project_id"]
       end
@@ -37,20 +51,24 @@ module RightScaleSelfService
 
       attr_reader :interface
 
+
+      # @param params [Hash] a hash of parameters where the possible values are
+      #   * account_id [String] (required) A RightScale account id
+      #   * selfservice_url [String] (required) URL to use for Self Service API
+      #     requests.  I.E. https://selfservice-4.rightscale.com
+      #   * api_url [String] (required) URL to use for Cloud Management API
+      #     requests. Only used once to authenticate.
+      #     I.E. https://us-4.rightscale.com
+      #   * access_token [String] A RightScale API OAuth Access Token
+      #   * refresh_token [String] A RightScale API OAuth Refresh Token, which
+      #     will be exchanged for an access token
+      #   * email [String] A RightScale user email address
+      #   * password [String] A RightScale user password
+      #   * logger [Logger] A logger which will be used, mostly for debug purposes
       def initialize(params)
         @services = {}
         @auth = {"cookie" => {}, "authorization" => {}}
         required_params = [:account_id,:selfservice_url,:api_url]
-        # allowed_params = [
-        #   :access_token,
-        #   :refresh_token,
-        #   :account_id,
-        #   :selfservice_url,
-        #   :api_url,
-        #   :email,
-        #   :password,
-        #   :logger
-        # ]
 
         # Use the defined logger, or log to a blackhole
         if params.include?(:logger)
@@ -143,6 +161,15 @@ module RightScaleSelfService
         end
       end
 
+      # Accepts request parameters and returns a Rest Client Request which has
+      # necessary authentication details appended.
+      #
+      # @param request_params [Hash] A hash of params to be passed to
+      #   RestClient::Request.new after it has had API authentication details
+      #   injected
+      #
+      # @return [RestClient::Request] A request which is ready to be executed
+      #   cause it's got necessary authentication details
       def get_authorized_rest_client_request(request_params)
         if @auth["cookie"].length > 0
           request_params[:cookies] = @auth["cookie"]
@@ -159,6 +186,18 @@ module RightScaleSelfService
         RestClient::Request.new(request_params)
       end
 
+      # Returns a service of the specified (or newest) version
+      #
+      # @param name [String] The name of the desired service
+      #
+      # @return [RightScaleSelfService::Api::Service]
+      #
+      # @example Get latest version (1.0) of designer service
+      #   service = client.designer
+      #   service.version #=> "1.0"
+      # @example Get specified version of designer service
+      #   service = client.designer("1.1")
+      #   service.version #=> "1.1"
       def method_missing(name, *args)
         unless interface["services"].has_key?(name.to_s)
           raise "No service named \"#{name}\" can not be found. Available services are [#{interface["services"].keys.join(',')}]"
@@ -184,6 +223,12 @@ module RightScaleSelfService
         end
       end
 
+      # Converts the input param to a relative href.
+      # I.E. /api/service/:account_id/resource
+      #
+      # @param url [String] The full url to get the relative href from
+      #
+      # @return [String] A relative href
       def get_relative_href(url)
         url.gsub!(@selfservice_url,"")
       end
