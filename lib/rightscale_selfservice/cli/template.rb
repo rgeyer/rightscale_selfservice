@@ -153,6 +153,32 @@ module RightScaleSelfService
         end
       end
 
+      desc "execute <filepath>", "Create a new execution (CloudApp) from a template. Optionally supply parameter values"
+      option :options_file, :type => :string, :desc => "A filepath to a JSON file containing data which will be passed into the \"options\" parameter of the API call."
+      def execute(filepath)
+        source_filepath = File.expand_path(filepath, Dir.pwd)
+        source_filename = File.basename(source_filepath)
+        source_dir = File.dirname(source_filepath)
+        result = RightScaleSelfService::Utilities::Template.preprocess(source_filepath)
+        client = get_api_client()
+        params = {:source => result}
+        if @options["options_file"]
+          options_filepath = File.expand_path(@options["options_file"], Dir.pwd)
+          options_str = File.open(File.expand_path(options_filepath), 'r') { |f| f.read }
+          #request_options = JSON.parse(options_str)
+          params["options"] = options_str
+        end
+
+        begin
+          exec_response = client.manager.execution.create(params)
+          logger.info("Successfully started execution. Href: #{exec_response.headers[:location]}")
+        rescue RestClient::ExceptionWithResponse => e
+          shell = Thor::Shell::Color.new
+          message = "Failed to create execution from template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+          logger.error(shell.set_color message, :red)
+        end
+      end
+
     end
   end
 end
