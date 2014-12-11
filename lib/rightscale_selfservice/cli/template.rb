@@ -133,6 +133,26 @@ module RightScaleSelfService
         end
       end
 
+      desc "list", "Lists all templates"
+      option :property, :type => :array, :desc => "When supplied, only the specified properties will be displayed.  By default the entire response is supplied."
+      def list
+        client = get_api_client()
+        begin
+          list_response = client.designer.template.index()
+          templates = JSON.parse(list_response.body)
+          if @options["property"]
+            templates.each do |template|
+              template.delete_if{|k,v| !(@options["property"].include?(k))}
+            end
+          end
+          puts JSON.pretty_generate(templates)
+        rescue RestClient::ExceptionWithResponse => e
+          shell = Thor::Shell::Color.new
+          message = "Failed to list templates\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+          logger.error(shell.set_color message, :red)
+        end
+      end
+
     end
   end
 end
