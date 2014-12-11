@@ -103,5 +103,6 @@ If that works, maybe start up a Cloud App from it
 
 ```
 rightscale_selfservice template execute ~/Code/cat/somecat.cat.rb --auth-file=~/.right_api_client/login.yml
+```
 
 ## API Client
