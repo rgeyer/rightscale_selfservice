@@ -55,6 +55,7 @@ module RightScaleSelfService
 
       desc "upsert <filepath>", "Upload <filepath> to SS as a new template or updates an existing one (based on name)"
       def upsert(filepath)
+        template_href = ""
         source_filepath = File.expand_path(filepath, Dir.pwd)
         source_filename = File.basename(source_filepath)
         source_dir = File.dirname(source_filepath)
@@ -65,6 +66,8 @@ module RightScaleSelfService
         tmp_file = matches["name"].gsub("/","-").gsub(" ","-")
         name = matches["name"]
 
+        logger.info("Fetching a list of existing templates to see if \"#{name}\" exists...")
+
         templates = JSON.parse(client.designer.template.index.body)
         existing_templates = templates.select{|t| t["name"] == name }
 
@@ -73,14 +76,17 @@ module RightScaleSelfService
           tmpfile.write(template)
           tmpfile.rewind
           if existing_templates.length != 0
+            logger.info("A template named \"#{name}\" already exists, updating it...")
             template_id = existing_templates.first()["id"]
             request = client.designer.template.update({:id => template_id, :source => tmpfile}, true)
             response = request.execute
             template_href = client.get_relative_href(request.url)
           else
+            logger.info("Creating template \"#{name}\"...")
             response = client.designer.template.create({:source => tmpfile})
             template_href = response.headers[:location]
           end
+          logger.info("Successfully upserted \"#{name}\".  Href: #{template_href}")
         rescue RestClient::ExceptionWithResponse => e
           shell = Thor::Shell::Color.new
           message = "Failed to update or create template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
@@ -88,7 +94,45 @@ module RightScaleSelfService
         ensure
           tmpfile.close!()
         end
+        template_href
       end
+
+      desc "publish <filepath>", "Update and publish a template (based on name)"
+      option :override, :type => :boolean, :default => false, :desc => "When supplied the template will be published even if it already exists in the catalog.  False by default, so an error will be raised if the application already exists."
+      def publish(filepath)
+        shell = Thor::Shell::Color.new
+        template_href = upsert(filepath)
+        template_id = template_href.split("/").last
+        client = get_api_client()
+        logger.info("Publishing template Href: #{template_href}")
+        publish_params = {:id => template_id}
+        begin
+          response = client.designer.template.publish(publish_params)
+          logger.info("Successfully published template.")
+        rescue RestClient::ExceptionWithResponse => e
+          if e.http_code == 409 && @options["override"]
+            logger.warn("Template id \"#{template_id}\" has already been published, but --override was set so we'll try to publish again with the overridden_application_href parameter.")
+            begin
+              app_response = client.catalog.application.index()
+              applications = JSON.parse(app_response.body)
+              matching_apps = applications.select{|a| a["template_info"]["href"] == template_href}
+              if matching_apps == 0
+                logger.error(shell.set_color "Unable to find the published application for template id \"#{template_id}\"")
+              else
+                publish_params[:overridden_application_href] = matching_apps.first["href"]
+                retry
+              end
+            rescue RestClient::ExceptionWithResponse => e
+              message = "Failed to get a list of existing published templates\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+              logger.error(shell.set_color message, :red)
+            end
+          else
+            message = "Failed to publish template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+            logger.error(shell.set_color message, :red)
+          end
+        end
+      end
+
     end
   end
 end
