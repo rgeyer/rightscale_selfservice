@@ -1,7 +1,7 @@
 rightscale_selfservice
 ======================
 
-A rubygem with a self service [API client](./#API Client), and buncha useful [CLI](./#CLI) bits for
+A rubygem with a self service [API client](./#api-client), and buncha useful [CLI](./#cli) bits for
 RightScale Self Service, including a test harness for Cloud Application Templates
 
 Travis Build Status: [<img src="https://travis-ci.org/rgeyer/rightscale_selfservice.png" />](https://travis-ci.org/rgeyer/rightscale_selfservice)
@@ -12,18 +12,18 @@ Travis Build Status: [<img src="https://travis-ci.org/rgeyer/rightscale_selfserv
 gem install rightscale_selfservice
 ```
 
-Setup some [Authentication](./#Authentication) details
+Setup some [Authentication](./#authentication) details
 
-Explore the [CLI](./#CLI).
+Explore the [CLI](./#cli).
 ```
 rightscale_selfservice help
 ```
 
-Explore the [API Client](./#API Client).
+Explore the [API Client](./#api-client).
 
 ## Authentication
 
-rightscale_selfservice can authenticate with the APIs with (roughly) the same
+rightscale_selfservice can authenticate with the APIs using (roughly) the same
 properties as [right_api_client](https://github.com/rightscale/right_api_client).
 
 The only additional required property is "selfservice_url".
