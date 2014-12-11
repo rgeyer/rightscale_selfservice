@@ -246,12 +246,13 @@ module RightScaleSelfService
         formatted_text = ""
         if error
           if error.is_a?(RestClient::ExceptionWithResponse)
+            formatted_text = "HTTP Response Code: #{error.http_code}\nMessage:\n"
             if error.response.headers[:content_type] == "application/json"
-              formatted_text = JSON.pretty_generate(
+              formatted_text += JSON.pretty_generate(
                 JSON.parse(error.response.body)
               ).gsub('\n',"\n")
             else
-              formatted_text = error.response.body
+              formatted_text += error.response.body
             end
           end
         else

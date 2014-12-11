@@ -17,21 +17,29 @@
 # IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require File.expand_path(File.join(File.dirname(__FILE__), 'execution.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'template.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'operation.rb'))
-
 module RightScaleSelfService
   module Cli
-    class Main < Base
-      desc "execution", "Self Service Execution Commands"
-      subcommand "execution", Execution
+    class Execution < Base
+      desc "list", "List all executions (CloudApps)"
+      option :property, :type => :array, :desc => "When supplied, only the specified properties will be displayed.  By default the entire response is supplied."
+      def list
+        client = get_api_client()
 
-      desc "template", "Self Service Template Commands"
-      subcommand "template", Template
-
-      desc "operation", "Self Service Operation Commands"
-      subcommand "operation", Operation
+        begin
+          response = client.manager.execution.index
+          executions = JSON.parse(response.body)
+          if @options["property"]
+            executions.each do |execution|
+              execution.delete_if{|k,v| !(@options["property"].include?(k))}
+            end
+          end
+          puts JSON.pretty_generate(executions)
+        rescue RestClient::ExceptionWithResponse => e
+          shell = Thor::Shell::Color.new
+          message = "Failed to list executions\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+          logger.error(shell.set_color message, :red)
+        end
+      end
     end
   end
 end

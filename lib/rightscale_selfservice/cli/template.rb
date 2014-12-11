@@ -165,7 +165,6 @@ module RightScaleSelfService
         if @options["options_file"]
           options_filepath = File.expand_path(@options["options_file"], Dir.pwd)
           options_str = File.open(File.expand_path(options_filepath), 'r') { |f| f.read }
-          #request_options = JSON.parse(options_str)
           params["options"] = options_str
         end
 
