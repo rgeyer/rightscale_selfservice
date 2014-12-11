@@ -1,7 +1,7 @@
 rightscale_selfservice
 ======================
 
-A rubygem with a self service [API client](./#api-client), and buncha useful [CLI](./#cli) bits for
+A rubygem with a self service [API client](#api-client), and buncha useful [CLI](#cli) bits for
 RightScale Self Service, including a test harness for Cloud Application Templates
 
 Travis Build Status: [<img src="https://travis-ci.org/rgeyer/rightscale_selfservice.png" />](https://travis-ci.org/rgeyer/rightscale_selfservice)
@@ -12,14 +12,14 @@ Travis Build Status: [<img src="https://travis-ci.org/rgeyer/rightscale_selfserv
 gem install rightscale_selfservice
 ```
 
-Setup some [Authentication](./#authentication) details
+Setup some [Authentication](#authentication) details
 
-Explore the [CLI](./#cli).
+Explore the [CLI](#cli).
 ```
 rightscale_selfservice help
 ```
 
-Explore the [API Client](./#api-client).
+Explore the [API Client](#api-client).
 
 ## Authentication
 
@@ -45,59 +45,63 @@ A working \*.yml file might look like;
 
 ## CLI
 
-Main Commands
-```
-rightscale_selfservice help
-Commands:
-  rightscale_selfservice execution       # Self Service Execution Commands
-  rightscale_selfservice help [COMMAND]  # Describe available commands or one specific command
-  rightscale_selfservice operation       # Self Service Operation Commands
-  rightscale_selfservice template        # Self Service Template Commands
+### Template Includes
+For any of the template commands, the template will be preprocessed
+to replace any #include:/path/to/another/cat/file with the contents of that file.
 
-Options:
-  [--auth-hash=<auth-hash>]      # A hash of auth parameters in the form (email:foo@bar.baz password:password account_id:12345)
-  [--auth-file=<auth-filepath>]  # A yaml file containing auth parameters to use for authentication
-```
+This allows for shared libraries to be built and stored along side your CATs.
 
-Execution Commands
-```
-rightscale_selfservice execution help
-Commands:
-  rightscale_selfservice execution help [COMMAND]  # Describe subcommands or one specific subcommand
-  rightscale_selfservice execution list            # List all executions (CloudApps)
+Example:
 
-Options:
-  [--auth-hash=<auth-hash>]      # A hash of auth parameters in the form (email:foo@bar.baz password:password account_id:12345)
-  [--auth-file=<auth-filepath>]  # A yaml file containing auth parameters to use for authentication
+Main template
+```
+name 'cat-with-includes'
+rs_ca_ver 20131202
+short_description 'has some includes'
+
+#include:../definitions/foo.cat.rb
 ```
 
-Operation Commands
+foo.cat.rb
 ```
-rightscale_selfservice operation help
-Commands:
-  rightscale_selfservice operation create <operation_name> <execution_id_or_href>  # Creates a new operation with the name <operation_name> on the ex...
-  rightscale_selfservice operation help [COMMAND]                                  # Describe subcommands or one specific subcommand
-
-Options:
-  [--auth-hash=<auth-hash>]      # A hash of auth parameters in the form (email:foo@bar.baz password:password account_id:12345)
-  [--auth-file=<auth-filepath>]  # A yaml file containing auth parameters to use for authentication
+define foo() return @clouds do
+  @clouds = rs.clouds.get()
+end
 ```
 
-Template Commands
+Results in
 ```
-rightscale_selfservice template help
-Commands:
-  rightscale_selfservice template compile <filepath>     # Uploads <filepath> to SS, validating the syntax. Will report errors if any are found.
-  rightscale_selfservice template execute <filepath>     # Create a new execution (CloudApp) from a template. Optionally supply parameter values
-  rightscale_selfservice template help [COMMAND]         # Describe subcommands or one specific subcommand
-  rightscale_selfservice template list                   # Lists all templates
-  rightscale_selfservice template preprocess <filepath>  # Processes <filepath>, #include:/path/to/file statements with file contents. Will create a ...
-  rightscale_selfservice template publish <filepath>     # Update and publish a template (based on name)
-  rightscale_selfservice template upsert <filepath>      # Upload <filepath> to SS as a new template or updates an existing one (based on name)
+name 'cat-with-includes'
+rs_ca_ver 20131202
+short_description 'has some includes'
 
-Options:
-  [--auth-hash=<auth-hash>]      # A hash of auth parameters in the form (email:foo@bar.baz password:password account_id:12345)
-  [--auth-file=<auth-filepath>]  # A yaml file containing auth parameters to use for authentication
+###############################################################################
+# BEGIN Include from ../definitions/foo.cat.rb
+###############################################################################
+define foo() return @clouds do
+  @clouds = rs.clouds.get()
+end
+###############################################################################
+# END Include from ../definitions/foo.cat.rb
+###############################################################################
 ```
+
+You can simply run the preprocessor on your CAT and get a file with all the
+appropriate includes with the "preprocess" command.
+
+```
+rightscale_selfservice template preprocess ~/Code/cat/somecat.cat.rb -o /tmp/processedcat.cat.rb
+```
+
+Then maybe check if all your syntax is good by using the API to "compile" your CAT
+
+```
+rightscale_selfservice template compile ~/Code/cat/somecat.cat.rb --auth-file=~./.right_api_client/login.yml
+```
+
+If that works, maybe start up a Cloud App from it
+
+```
+rightscale_selfservice template execute ~/Code/cat/somecat.cat.rb --auth-file=~/.right_api_client/login.yml
 
 ## API Client
