@@ -36,12 +36,13 @@ EOF
             exit 1
           end
           if @options['auth_file']
-            client_auth_params = YAML.load_file(File.expand_path(@options['auth_file'], Dir.pwd))
+            yaml_hash = YAML.load_file(File.expand_path(@options['auth_file'], Dir.pwd))
+            client_auth_params = yaml_hash.inject({}){|memo,(k,v)| memo[k.to_sym] = v.to_s; memo}
           end
 
           if @options['auth_hash']
             # Thanks - http://stackoverflow.com/questions/800122/best-way-to-convert-strings-to-symbols-in-hash
-            client_auth_params = @options['auth_hash'].inject({}){|memo,(k,v)| memo[k.to_sym] = v; memo}
+            client_auth_params = @options['auth_hash'].inject({}){|memo,(k,v)| memo[k.to_sym] = v.to_s; memo}
           end
 
           RightScaleSelfService::Api::Client.new(client_auth_params)
