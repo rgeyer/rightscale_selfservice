@@ -43,7 +43,17 @@ def get_mock_interface_hash()
         ]
       ]
     }
+    post_action = {
+      "name" => "post",
+      "urls" => [
+        [
+          "POST",
+          "/foo/#{resource}/:id/action"
+        ]
+      ]
+    }
     interface_hash["services"]["foo"]["1.0"][resource]["controller"]["actions"] << show_action
+    interface_hash["services"]["foo"]["1.0"][resource]["controller"]["actions"] << post_action
     account_id_tokens.each do |token|
       action = {
         "name" => token.gsub(":",""),
