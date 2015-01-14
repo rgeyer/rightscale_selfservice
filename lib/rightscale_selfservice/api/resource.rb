@@ -66,6 +66,11 @@ module RightScaleSelfService
               params[:payload] = URI.encode_www_form(args[0])
             end
           end
+
+          if method == :get && params.has_key?(:payload)
+            params[:url] += "?#{params[:payload]}"
+            params.delete(:payload)
+          end
         end
 
         request = @service.client.get_authorized_rest_client_request(params)

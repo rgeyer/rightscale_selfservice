@@ -28,7 +28,7 @@ describe RightScaleSelfService::Api::Resource do
         client = get_mock_client_for_interface()
         service = flexmock(:name => "foo", :version => "1.0", :client => client)
         resource = RightScaleSelfService::Api::Resource.new("bar", service)
-        expect { resource.foo }.to raise_error("No action named \"foo\" was found on resource \"bar\" in version \"1.0\" of service \"foo\". Available actions are [show,#{account_id_tokens.join(",")}]")
+        expect { resource.foo }.to raise_error("No action named \"foo\" was found on resource \"bar\" in version \"1.0\" of service \"foo\". Available actions are [show,post,#{account_id_tokens.join(",")}]")
       end
     end
 
@@ -37,21 +37,17 @@ describe RightScaleSelfService::Api::Resource do
         client = get_mock_client_for_interface()
         client.should_receive(:account_id).and_return("12345")
         service = flexmock(:name => "foo", :version => "1.0", :client => client, :base_url => "http://ss")
-        account_id_tokens = RightScaleSelfService::Api::Client.get_known_account_id_tokens
-        account_id_tokens.map! {|token| token.gsub(":","")}
-        account_id_tokens.each do |token|
-          client.should_receive(:get_authorized_rest_client_request)
-            .once
-            .with(
-              FlexMock.hsh(
-                :method => :get,
-                :url => "http://ss/foo/12345/foo/action",
-                :payload => "bar=baz"
-              )
-            ).and_return(flexmock(:execute => ""))
-          api_resource = RightScaleSelfService::Api::Resource.new("foo", service)
-          api_resource.send(token, {:bar => "baz"})
-        end
+        client.should_receive(:get_authorized_rest_client_request)
+          .once
+          .with(
+            FlexMock.hsh(
+              :method => :post,
+              :url => "http://ss/foo/foo/12345/action",
+              :payload => "bar=baz"
+            )
+          ).and_return(flexmock(:execute => ""))
+        api_resource = RightScaleSelfService::Api::Resource.new("foo", service)
+        api_resource.post(:id => "12345", :bar => "baz")
       end
     end
 
@@ -96,13 +92,35 @@ describe RightScaleSelfService::Api::Resource do
           .once
           .with(
             FlexMock.hsh(
-              :method => :get,
-              :url => "http://ss/foo/12345/foo/action",
+              :method => :post,
+              :url => "http://ss/foo/foo/12345/action",
               :payload => {:bar => file, :baz => "foo"}
             )
           ).and_return(flexmock(:execute => ""))
         api_resource = RightScaleSelfService::Api::Resource.new("foo", service)
-        api_resource.account_id({:bar => file, :baz => "foo"}, true)
+        api_resource.post({:id => "12345", :bar => file, :baz => "foo"}, true)
+      end
+    end
+
+    context "http verb is get" do
+      it "puts parameters in url rather than body" do
+        client = get_mock_client_for_interface()
+        client.should_receive(:account_id).and_return("12345")
+        service = flexmock(:name => "foo", :version => "1.0", :client => client, :base_url => "http://ss")
+        account_id_tokens = RightScaleSelfService::Api::Client.get_known_account_id_tokens
+        account_id_tokens.map! {|token| token.gsub(":","")}
+        account_id_tokens.each do |token|
+          client.should_receive(:get_authorized_rest_client_request)
+            .once
+            .with(
+              FlexMock.hsh(
+                :method => :get,
+                :url => "http://ss/foo/12345/foo/action?foo=yes&bar=baz"
+              )
+            ).and_return(flexmock(:execute => ""))
+          api_resource = RightScaleSelfService::Api::Resource.new("foo", service)
+          api_resource.send(token, {:foo => "yes", :bar => "baz"})
+        end
       end
     end
 
