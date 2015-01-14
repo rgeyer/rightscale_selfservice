@@ -287,6 +287,38 @@ describe RightScaleSelfService::Api::Client do
     end
   end
 
+  describe "#get_resource_id_from_href" do
+
+    context "provided a full url with protocol and hostname" do
+      it "returns the expected id" do
+        resource_id = RightScaleSelfService::Api::Client.get_resource_id_from_href("https://ss/api/service/12345/foo/12345")
+        expect(resource_id).to match "12345"
+      end
+    end
+
+    context "provided relative href" do
+      it "returns the expected id" do
+        resource_id = RightScaleSelfService::Api::Client.get_resource_id_from_href("/api/service/12345/foo/12345")
+        expect(resource_id).to match "12345"
+      end
+    end
+
+    context "provided an id" do
+      it "returns the expected id" do
+        resource_id = RightScaleSelfService::Api::Client.get_resource_id_from_href("12345")
+        expect(resource_id).to match "12345"
+      end
+    end
+
+    context "provided something completely different" do
+      it "returns null" do
+        resource_id = RightScaleSelfService::Api::Client.get_resource_id_from_href("something else\/entirely\/This#)^%IsNotANumber")
+        expect(resource_id).to eq nil
+      end
+    end
+
+  end
+
   describe "#format_error" do
     context "RestClient::ExceptionWithResponse with json body" do
       it "knows how to format it" do

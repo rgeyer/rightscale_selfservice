@@ -238,6 +238,23 @@ module RightScaleSelfService
         url.gsub!(@selfservice_url,"")
       end
 
+      # Accepts a full URL with protocol and hostname, or a relative href and
+      # returns the ID which is the last token in the path.
+      #
+      # I.E. https://hostname/api/foo/bar/baz/12345 == 12345
+      # and /api/foo/bar/baz/12345 == 12345
+      #
+      # @param url_href_or_id [String] The full url with protocol and hostname,
+      #   a relative resource href, or the id.
+      #
+      # @return [String] ID of the resource referred to by the url or href, or
+      #   nil if the id can not be determined.
+      def self.get_resource_id_from_href(url_href_or_id)
+        return url_href_or_id if url_href_or_id =~ /^[a-zA-Z0-9]*$/
+        matchdata = url_href_or_id.match(/[a-zA-Z0-9\/]*\/(?<id>[a-zA-Z0-9]*)$/)
+        matchdata['id'] if matchdata
+      end
+
       # Accepts various possible responses and formats it into useful error text
       #
       # @param [RestClient::ExceptionWithResponse] error The response or error
