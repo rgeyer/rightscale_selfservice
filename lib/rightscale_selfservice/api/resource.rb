@@ -64,6 +64,11 @@ module RightScaleSelfService
               params[:payload] = args[0]
             else
               params[:payload] = URI.encode_www_form(args[0])
+              args[0].each do |k,v|
+                if v.is_a?(Array)
+                  params[:payload].gsub!("#{k}=","#{k}[]=")
+                end
+              end
             end
           end
 

@@ -102,6 +102,25 @@ describe RightScaleSelfService::Api::Resource do
       end
     end
 
+    context "one of the request params is an array" do
+      it "represents it in a way appropriate for the api" do
+        client = get_mock_client_for_interface()
+        client.should_receive(:account_id).and_return("12345")
+        service = flexmock(:name => "foo", :version => "1.0", :client => client, :base_url => "http://ss")
+        client.should_receive(:get_authorized_rest_client_request)
+          .once
+          .with(
+            FlexMock.hsh(
+              :method => :post,
+              :url => "http://ss/foo/foo/12345/action",
+              :payload => "foo[]=bar&foo[]=baz"
+            )
+          ).and_return(flexmock(:execute => ""))
+        api_resource = RightScaleSelfService::Api::Resource.new("foo", service)
+        api_resource.post({:id => "12345", :foo => ["bar","baz"]}, true)
+      end
+    end
+
     context "http verb is get" do
       it "puts parameters in url rather than body" do
         client = get_mock_client_for_interface()
