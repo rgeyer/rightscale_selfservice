@@ -43,6 +43,28 @@ module RightScaleSelfService
           logger.error(shell.set_color message, :red)
         end
       end
+
+      desc "show <id_or_href>", "Gets details about an execution (CloudApp) specified by <id_or_href>"
+      option :view, :type => :string, :default => 'default', :desc => "Which view to use, one of [default,expanded,source] default is 'default'."
+      option :property, :type => :array, :desc => "When supplied, only the specified properties will be displayed. By default the entire response is supplied. Ignored if view is 'source'"
+      def show(id_or_href)
+        client = get_api_client()
+        id = RightScaleSelfService::Api::Client.get_resource_id_from_href(id_or_href)
+
+        begin
+          response = client.manager.execution.show(:id => id, :view => @options["view"])
+          execution = JSON.parse(response.body)
+          if @options["property"] && @options["view"] != "source"
+            execution.delete_if{|k,v| !(@options["property"].include?(k))}
+          end
+          puts JSON.pretty_generate(execution)
+        rescue RestClient::ExceptionWithResponse => e
+          shell = Thor::Shell::Color.new
+          message = "Failed to show execution id #{id}\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+          logger.error(shell.set_color message, :red)
+        end
+      end
+
     end
   end
 end
