@@ -28,13 +28,13 @@ properties as [right_api_client](https://github.com/rightscale/right_api_client)
 
 The only additional required property is "selfservice_url".
 
-The CLI can use a \*.yml file containing those properties or have them passed in
+The CLI can use a .yml file containing those properties or have them passed in
 on the commandline.  The API Client accepts an input hash with these same
 properties.
 
-An example \*.yml file can be found [here](https://github.com/rightscale/right_api_client/blob/v1.5.24/config/login.yml.example)
+An example .yml file can be found [here](https://github.com/rightscale/right_api_client/blob/v1.5.24/config/login.yml.example)
 
-A working \*.yml file might look like;
+A working .yml file might look like;
 ```
 :account_id: 12345
 :email: user@domain.com
@@ -104,6 +104,36 @@ If that works, maybe start up a Cloud App from it
 ```
 rightscale_selfservice template execute ~/Code/cat/somecat.cat.rb --auth-file=~/.right_api_client/login.yml
 ```
+
+## Testing
+
+Included as a framework for performing functional tests of your Cloud
+Application Templates (CATs). Tests are performed as part of a [Suite](#suite)
+which contains one or more [Template](#template), which have one or more test
+[Case](#case).
+
+### Suite
+A suite is currently defined simply by the [glob](http://ruby-doc.org/core-1.9.3/Dir.html#method-c-glob)
+you pass either to the [CLI](#cli) or the test suite class.
+
+I might consider creating a config file or other options, but for now the suite
+is basically just a container.
+
+The suite will interrogate the files found by the input glob, and create
+individual [Template](#template) classes.
+
+### Template
+A template is a 1-to-1 match with a CAT file found by the [Suite](#suite).
+
+The template class will interrogate the contents of the CAT and create individual
+[Case](#case) classes.
+
+### Case
+There are three types of cases, which are automatically detected.
+
+1) Compile, which merely checks if the CAT will compile successfully
+2) Execute, this checks if the CAT will execute and reach a desired state (defined by *.*)
+3) Operations, this checks if specified custom operations of the CAT execute and reach a desired state (defined by *.*)
 
 ## API Client
 

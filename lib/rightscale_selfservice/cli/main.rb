@@ -33,6 +33,28 @@ module RightScaleSelfService
 
       desc "operation", "Self Service Operation Commands"
       subcommand "operation", Operation
+
+      desc "test <glob>", "Run a CAT Test suite consisting of files found in <glob>"
+      def test(glob)
+        client = get_api_client()
+        suite = RightScaleSelfService::Test::Suite.new(client, glob)
+        report = RightScaleSelfService::Test::ShellReport.new(suite)
+        begin
+          if suite.pump
+            report.progress
+            sleep(10)
+          else
+            break
+          end
+        end while true
+        report.progress
+        puts "\n\n"
+        error_text = report.errors
+        if error_text != ""
+          puts "\n\n"
+        end
+        report.failures
+      end
     end
   end
 end
