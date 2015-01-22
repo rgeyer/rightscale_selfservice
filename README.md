@@ -131,9 +131,9 @@ The template class will interrogate the contents of the CAT and create individua
 ### Case
 There are three types of cases, which are automatically detected.
 
-1) Compile, which merely checks if the CAT will compile successfully
-2) Execute, this checks if the CAT will execute and reach a desired state (defined by *.*)
-3) Operations, this checks if specified custom operations of the CAT execute and reach a desired state (defined by *.*)
+1. Compile, which merely checks if the CAT will compile successfully
+2. Execute, this checks if the CAT will execute and reach a desired state (defined by *.*)
+3. Operations, this checks if specified custom operations of the CAT execute and reach a desired state (defined by *.*)
 
 ## API Client
 
