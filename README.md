@@ -1,3 +1,36 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [rightscale_selfservice](#rightscale_selfservice)
+  - [Quick Start](#quick-start)
+  - [Authentication](#authentication)
+  - [CLI](#cli)
+    - [Template Includes](#template-includes)
+  - [Testing](#testing)
+    - [Suite](#suite)
+    - [Template](#template)
+    - [Case](#case)
+      - [Compile](#compile)
+      - [Execute](#execute)
+      - [Operations](#operations)
+  - [API Client](#api-client)
+    - [Supported Services, Resources and Actions](#supported-services-resources-and-actions)
+    - [How it works](#how-it-works)
+      - [Href Tokens](#href-tokens)
+      - [Automatic Multipart](#automatic-multipart)
+    - [Some examples...](#some-examples)
+      - [Authentication](#authentication-1)
+      - [Service Versions](#service-versions)
+      - [Executing Actions](#executing-actions)
+        - [List operations](#list-operations)
+        - [Show a template](#show-a-template)
+        - [Get RestClient::Request Instead of Executing Action](#get-restclientrequest-instead-of-executing-action)
+        - [Format Errors](#format-errors)
+        - [Multipart Detection](#multipart-detection)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 rightscale_selfservice
 ======================
 
@@ -129,11 +162,52 @@ The template class will interrogate the contents of the CAT and create individua
 [Case](#case) classes.
 
 ### Case
-There are three types of cases, which are automatically detected.
+There are three types of cases, which are defined by comments in the CAT.
 
-1. Compile, which merely checks if the CAT will compile successfully
-2. Execute, this checks if the CAT will execute and reach a desired state (defined by *.*)
-3. Operations, this checks if specified custom operations of the CAT execute and reach a desired state (defined by *.*)
+#### Compile
+Merely checks if the CAT will compile successfully. When a template is tagged
+to include a compile test case every other test will be ignored.
+
+To create a test template which will only be tested for successful compile add
+the following to the top of the template
+```
+#test:compile_only=true
+```
+
+#### Execute
+This checks if the CAT will execute and reach a desired state.
+
+To create a test template with an execute test case which will succeed if the
+CAT launches successfully.
+
+```
+#test:execution_state=success
+```
+
+For the negative test case, where a CAT which launches and fails is actually a
+successful test.
+
+```
+#test:execution_state=failed
+```
+
+There are also scenarios where a successful test should end in a specified state
+but because of external issues (system bugs, reusable definitions, etc) the
+opposite state is reached. In this case you can specify both the desired state
+as the "execution_state" as well as an "execution_alternate_state".
+
+If the CAT launches and reaches the alternate state the test case will be marked
+as "FAILED (EXPECTED)", and if it reaches the desired state it will be marked
+"FIXED"
+
+```
+#test:execution_state=success
+#test:execution_alternate_state=failed
+```
+
+#### Operations
+This checks if specified custom operations of the CAT execute and reach a
+desired state.
 
 ## API Client
 
