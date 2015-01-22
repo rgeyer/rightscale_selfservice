@@ -177,11 +177,14 @@ the following to the top of the template
 #### Execute
 This checks if the CAT will execute and reach a desired state.
 
+If no tags are added to a template, an execute test case will be automatically
+run, with the assumption that it's expected execution_state is "running".
+
 To create a test template with an execute test case which will succeed if the
 CAT launches successfully.
 
 ```
-#test:execution_state=success
+#test:execution_state=running
 ```
 
 For the negative test case, where a CAT which launches and fails is actually a
@@ -201,13 +204,54 @@ as "FAILED (EXPECTED)", and if it reaches the desired state it will be marked
 "FIXED"
 
 ```
-#test:execution_state=success
+#test:execution_state=running
 #test:execution_alternate_state=failed
 ```
 
 #### Operations
-This checks if specified custom operations of the CAT execute and reach a
-desired state.
+Once a template has been successfully launched, any operation test cases will
+be run.
+
+An example of a CAT with two operations which should be run as test cases;
+```
+#test:execution_state=running
+#test:execution_alternate_state=failed
+
+name "Foo"
+rs_ca_ver 20131202
+short_description "Foo"
+
+#test_operation:execution_state=completed
+#test_operation:execution_alternate_state=failed
+#test_operation_param:key=val
+#test_operation_param:key1=val1
+#test_operation_param:key2=val2
+operation "one" do
+  description "one"
+  definition "foo"
+end
+
+#test_operation:execution_state=completed
+#test_operation:execution_alternate_state=failed
+#test_operation_param:key=val
+#test_operation_param:key1=val1
+#test_operation_param:key2=val2
+operation "two" do
+  description "two"
+  definition "foo"
+end
+
+define foo() do
+
+end
+```
+
+This will run the operations named "one" and "two" with the specified
+test_operation_param(s) as inputs to the operation. It will evaluate success
+or failure based on the "execution_state" specified.
+
+This has the same functionality as [Execute](#execute) in that you can specify
+a desired and alternative state.
 
 ## API Client
 
