@@ -121,10 +121,10 @@ foobarbaz.cat.rb:
           expected_output = <<-EOF
 \e[41m\e[30mERRORS:\e[0m
 \e[31mfoo.cat.rb:
-  compile_only case:
+  compile_only:
     error
 foobarbaz.cat.rb:
-  compile_only case:
+  compile_only:
     barbaz error 1
     barbaz error 2
 \e[0m
@@ -186,10 +186,10 @@ foobarbaz.cat.rb:
           expected_output = <<-EOF
 Failures:
 foo.cat.rb:
-  compile_only case:
+  compile_only:
     failure
 foobarbaz.cat.rb:
-  compile_only case:
+  compile_only:
     barbaz failure 1
     barbaz failure 2
           EOF
@@ -207,7 +207,7 @@ foobarbaz.cat.rb:
           report = RightScaleSelfService::Test::ShellReport.new(suite)
           expect{report.failures}.to output(expected_output).to_stdout
         end
-        
+
       end
     end
   end

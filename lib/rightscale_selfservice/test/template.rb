@@ -42,7 +42,11 @@ module RightScaleSelfService
           self.cases = [RightScaleSelfService::Test::Case.new(:compile_only)]
           self.state = "running"
         else
-          execution_state = template_str.match(/^#test:execution_state=(?<state>[0-9a-zA-Z ]*)/)['state']
+          execution_state_matches = template_str.match(/^#test:execution_state=(?<state>[0-9a-zA-Z ]*)/)
+          execution_state = 'running'
+          if execution_state_matches && execution_state_matches.names.include?('state')
+            execution_state = execution_state_matches['state']
+          end
           options = {:state => execution_state}
           alt_state_matches = template_str.match(/^#test:execution_alternate_state=(?<state>[0-9a-zA-Z ]*)/)
           if alt_state_matches && alt_state_matches.size > 0
@@ -56,10 +60,13 @@ module RightScaleSelfService
 
             options = {:operation_name => operation_name}
 
-            execution_state = tags.match(/^#test_operation:execution_state=(?<state>[0-9a-zA-Z ]*)/)['state']
-            options[:state] = execution_state
+            execution_state_matches = tags.match(/^#test_operation:execution_state=(?<state>[0-9a-zA-Z ]*)/)
+            if execution_state_matches && execution_state_matches.names.include?('state')
+              options[:state] = execution_state_matches['state']
+            end
+
             alt_state_matches = tags.match(/^#test_operation:execution_alternate_state=(?<state>[0-9a-zA-Z ]*)/)
-            if alt_state_matches.size > 0
+            if alt_state_matches && alt_state_matches.names.include?('state')
               options[:alternate_state] = alt_state_matches['state']
             end
 
@@ -90,7 +97,7 @@ module RightScaleSelfService
           unfinished_cases = cases.select {|c| c.pump(suite, self)}
           if unfinished_cases.size == 0
             if self.api_responses.has_key?(:execution_create)
-              exec_id = get_execution_id()
+              exec_id = execution_id()
               self.api_responses[:terminate_operation_create] =
                 suite.api_client.manager.operation.create(
                   :name => 'terminate', :execution_id => exec_id
@@ -104,7 +111,7 @@ module RightScaleSelfService
           get_execution_status_and_set_as_state(suite)
         when 'terminated'
           begin
-            exec_id = get_execution_id()
+            exec_id = execution_id()
             if exec_id
               suite.api_client.manager.execution.delete(:id => exec_id)
             end
@@ -120,11 +127,22 @@ module RightScaleSelfService
         end
       end
 
+      def execution_id
+        unless self.api_responses.has_key?(:execution_create)
+          nil
+        else
+          execution_id = RightScaleSelfService::Api::Client
+            .get_resource_id_from_href(
+              self.api_responses[:execution_create].headers[:location]
+            )
+        end
+      end
+
       private
 
       def get_execution_status_and_set_as_state(suite)
         begin
-          exec_id = get_execution_id()
+          exec_id = execution_id()
           if exec_id
             self.api_responses[:execution_show] = suite.api_client.manager.execution.show(:id => exec_id)
             json_str = self.api_responses[:execution_show].body
@@ -135,15 +153,6 @@ module RightScaleSelfService
           # TODO: Do I want to catch errors here, or let it fall through and
           # let the next pump retry?
           self.errors << "Failed to check execution status\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
-        end
-      end
-
-      def get_execution_id
-        if self.api_responses.has_key?(:execution_create)
-          exec_href = self.api_responses[:execution_create].headers[:location]
-          RightScaleSelfService::Api::Client.get_resource_id_from_href(exec_href)
-        else
-          nil
         end
       end
 

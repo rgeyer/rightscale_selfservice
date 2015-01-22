@@ -142,8 +142,8 @@ describe RightScaleSelfService::Test::Case do
         it "returns false" do
           suite = flexmock('suite')
           template = flexmock('template')
-          template.should_receive(:state).once.and_return("running")
-          test_case = RightScaleSelfService::Test::Case.new(:execution, {:state => "running"})
+          template.should_receive(:state).twice.and_return("running")
+          test_case = RightScaleSelfService::Test::Case.new(:execution, {:state => "failed"})
           expect(test_case.pump(suite,template)).to eql false
         end
 
@@ -164,7 +164,6 @@ describe RightScaleSelfService::Test::Case do
           test_case.pump(suite,template)
           expect(test_case.result).to match "FAILED"
           expect(test_case.failures.size).to eq 1
-          puts test_case.failures.first
         end
 
         context "and execution_alternate_state is matched" do
@@ -192,10 +191,227 @@ describe RightScaleSelfService::Test::Case do
     end
 
     context "operation type" do
-      it "is not implemented" do
-        pending("It get's implemented")
-        fail
+      context "template state is failed" do
+        it "returns false" do
+          suite = flexmock('suite')
+          template = flexmock('template')
+          template.should_receive(:state).and_return("failed")
+          test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+          expect(test_case.pump(suite,template)).to eql false
+        end
+
+        it "sets result to failed" do
+          suite = flexmock('suite')
+          template = flexmock('template')
+          template.should_receive(:state).and_return("failed")
+          test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+          test_case.pump(suite,template)
+          expect(test_case.result).to match "FAILED"
+        end
+
+        it "sets a failure message" do
+          suite = flexmock('suite')
+          template = flexmock('template')
+          template.should_receive(:state).and_return("failed")
+          test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+          test_case.pump(suite,template)
+          expect(test_case.failures.size).to eq 1
+        end
       end
+
+      context "template state is running" do
+        context "case state is initialized" do
+          context "operation create raises error" do
+            it "sets an error" do
+              res_mock = flexmock(:code => 500, :to_hash => {})
+              response = RestClient::Response.create("foo", res_mock, [])
+              operation_mock = flexmock('operation')
+              operation_mock.should_receive(:create).once.and_raise(RestClient::ExceptionWithResponse, response)
+              client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+              suite = flexmock('suite')
+              suite.should_receive(:api_client).and_return(client_mock)
+              template = flexmock('template')
+              template.should_receive(:execution_id).and_return("12345")
+              template.should_receive(:state).and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+              test_case.pump(suite,template)
+              expect(test_case.errors.size).to eql 1
+            end
+
+            it "returns false" do
+              res_mock = flexmock(:code => 500, :to_hash => {})
+              response = RestClient::Response.create("foo", res_mock, [])
+              operation_mock = flexmock('operation')
+              operation_mock.should_receive(:create).once.and_raise(RestClient::ExceptionWithResponse, response)
+              client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+              suite = flexmock('suite')
+              suite.should_receive(:api_client).and_return(client_mock)
+              template = flexmock('template')
+              template.should_receive(:execution_id).and_return("12345")
+              template.should_receive(:state).and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+              expect(test_case.pump(suite,template)).to eql false
+            end
+
+            it "sets result to error" do
+              res_mock = flexmock(:code => 500, :to_hash => {})
+              response = RestClient::Response.create("foo", res_mock, [])
+              operation_mock = flexmock('operation')
+              operation_mock.should_receive(:create).once.and_raise(RestClient::ExceptionWithResponse, response)
+              client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+              suite = flexmock('suite')
+              suite.should_receive(:api_client).and_return(client_mock)
+              template = flexmock('template')
+              template.should_receive(:execution_id).and_return("12345")
+              template.should_receive(:state).and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+              test_case.pump(suite,template)
+              expect(test_case.result).to match "ERROR"
+            end
+          end
+
+          it "creates an operation" do
+            operation_mock = flexmock('operation')
+            operation_mock.should_receive(:create).once.with(FlexMock.hsh(
+              :execution_id => '12345',
+              :name => 'foo',
+              :options => {:foo => 'bar'}
+            ))
+            client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+            suite = flexmock('suite')
+            suite.should_receive(:api_client).and_return(client_mock)
+            template = flexmock('template')
+            template.should_receive(:execution_id).and_return("12345")
+            template.should_receive(:state).and_return("running")
+            test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo", :params => {:foo => 'bar'}})
+            test_case.pump(suite,template)
+          end
+
+          it "returns true" do
+            operation_mock = flexmock('operation')
+            operation_mock.should_receive(:create)
+            client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+            suite = flexmock('suite')
+            suite.should_receive(:api_client).and_return(client_mock)
+            template = flexmock('template')
+            template.should_receive(:execution_id).and_return("12345")
+            template.should_receive(:state).and_return("running")
+            test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+            expect(test_case.pump(suite,template)).to eql true
+          end
+
+          it "sets state to running" do
+            operation_mock = flexmock('operation')
+            operation_mock.should_receive(:create)
+            client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+            suite = flexmock('suite')
+            suite.should_receive(:api_client).and_return(client_mock)
+            template = flexmock('template')
+            template.should_receive(:execution_id).and_return("12345")
+            template.should_receive(:state).and_return("running")
+            test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "running", :operation_name => "foo"})
+            test_case.pump(suite,template)
+            expect(test_case.state).to match 'running'
+          end
+        end
+
+        context "case state is running" do
+          it "checks the operation summary and sets it as the case state" do
+            operation_mock = flexmock('operation')
+            operation_mock.should_receive(:show).once.and_return(flexmock(:body => '{"status": {"summary": "foobarbaz"}}'))
+            client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+            suite = flexmock('suite')
+            suite.should_receive(:api_client).and_return(client_mock)
+            template = flexmock('template')
+            template.should_receive(:state).and_return("running")
+            test_case = RightScaleSelfService::Test::Case.new(:operation)
+            test_case.api_responses[:operation_create] = flexmock(:headers => {:location => "/12345"})
+            test_case.state = "running"
+            test_case.pump(suite, template)
+            expect(test_case.state).to match 'foobarbaz'
+          end
+        end
+
+        context "case state is completed or failed" do
+          context "execution_state is matched" do
+            it "returns false" do
+              suite = flexmock('suite')
+              template = flexmock('template')
+              template.should_receive(:state).once.and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "completed"})
+              test_case.state = "completed"
+              expect(test_case.pump(suite,template)).to eql false
+            end
+
+            it "marks the case successful" do
+              suite = flexmock('suite')
+              template = flexmock('template')
+              template.should_receive(:state).once.and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "completed"})
+              test_case.state = "completed"
+              test_case.pump(suite,template)
+              expect(test_case.result).to match "SUCCESS"
+            end
+
+            context "and execution_alternate_state is present" do
+              it "marks the case fixed" do
+                suite = flexmock('suite')
+                template = flexmock('template')
+                template.should_receive(:state).once.and_return("running")
+                test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "completed", :alternate_state => "failed"})
+                test_case.state = "completed"
+                test_case.pump(suite,template)
+                expect(test_case.result).to match "FIXED"
+              end
+            end
+          end
+
+          context "execution_state not matched" do
+            it "returns false" do
+              suite = flexmock('suite')
+              template = flexmock('template')
+              template.should_receive(:state).and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "completed"})
+              test_case.state = "failed"
+              expect(test_case.pump(suite,template)).to eql false
+            end
+
+            it "marks the case failed" do
+              suite = flexmock('suite')
+              template = flexmock('template')
+              template.should_receive(:state).and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "failed"})
+              test_case.state = "completed"
+              test_case.pump(suite,template)
+              expect(test_case.result).to match "FAILED"
+            end
+
+            it "adds a validation failure message" do
+              suite = flexmock('suite')
+              template = flexmock('template')
+              template.should_receive(:state).and_return("running")
+              test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "failed"})
+              test_case.state = "completed"
+              test_case.pump(suite,template)
+              expect(test_case.result).to match "FAILED"
+              expect(test_case.failures.size).to eq 1
+            end
+
+            context "and execution_alternate_state is matched" do
+              it "marks the case failed (expected)" do
+                suite = flexmock('suite')
+                template = flexmock('template')
+                template.should_receive(:state).and_return("running")
+                test_case = RightScaleSelfService::Test::Case.new(:operation, {:state => "completed", :alternate_state => "failed"})
+                test_case.state = "failed"
+                test_case.pump(suite,template)
+                expect(test_case.result).to match "FAILED (EXPECTED)"
+              end
+            end
+          end
+        end
+      end
+
     end
 
     context "unknown type" do

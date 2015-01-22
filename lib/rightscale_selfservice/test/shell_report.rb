@@ -41,7 +41,7 @@ module RightScaleSelfService
           if template.state == "finished" && !@reported_templates.include?(template)
             puts "#{template.name}: #{template.state}"
             template.cases.each do |testcase|
-              puts "  #{testcase.type}: #{@keyword_substitutions[testcase.result]}"
+              puts "  #{get_case_type_and_name(testcase)}: #{@keyword_substitutions[testcase.result]}"
             end
             @reported_templates << template
           end
@@ -61,7 +61,7 @@ module RightScaleSelfService
               to_puts += "  #{error}\n"
             end
             cases_with_errors.each do |case_with_errors|
-              to_puts += "  #{case_with_errors.type} case:\n"
+              to_puts += "  #{get_case_type_and_name(case_with_errors)}:\n"
               case_with_errors.errors.each do |error|
                 to_puts += "    #{error}\n"
               end
@@ -85,7 +85,7 @@ module RightScaleSelfService
               to_puts += "#{template.name}:\n"
             end
             cases_with_failures.each do |case_with_fail|
-              to_puts += "  #{case_with_fail.type} case:\n"
+              to_puts += "  #{get_case_type_and_name(case_with_fail)}:\n"
               # TODO: Add details for an operation case type to differentiate
               # them. This is probably an argument for having some of the
               # progress, error, and failure reporting live in the case
@@ -101,6 +101,16 @@ module RightScaleSelfService
             puts to_puts
           end
         end
+      end
+
+      private
+
+      def get_case_type_and_name(test_case)
+        retval = test_case.type.to_s
+        if test_case.type == :operation
+          retval += " (#{test_case.options[:operation_name]})"
+        end
+        retval
       end
 
     end
