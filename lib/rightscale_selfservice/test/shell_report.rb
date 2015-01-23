@@ -41,7 +41,8 @@ module RightScaleSelfService
           if template.state == "finished" && !@reported_templates.include?(template)
             puts "#{template.name}: #{template.state}"
             template.cases.each do |testcase|
-              puts "  #{get_case_type_and_name(testcase)}: #{@keyword_substitutions[testcase.result]}"
+              result = @keyword_substitutions.has_key?(testcase.result) ? @keyword_substitutions[testcase.result] : testcase.result
+              puts "  #{get_case_type_and_name(testcase)}: #{result}"
             end
             @reported_templates << template
           end
