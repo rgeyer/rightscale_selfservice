@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rightscale_selfservice (0.0.4)
+    rightscale_selfservice (0.0.5)
       logger-better (~> 0.1)
       rest-client (~> 1.7)
       thor (~> 0.19)
