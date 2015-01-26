@@ -106,19 +106,7 @@ module RightScaleSelfService
                 end
                 true
               when 'running'
-                begin
-                  operation_id = RightScaleSelfService::Api::Client.get_resource_id_from_href(self.api_responses[:operation_create].headers[:location])
-                  if operation_id
-                    self.api_responses[:operation_show] = suite.api_client.manager.operation.show(:id => operation_id)
-                    json_str = self.api_responses[:operation_show].body
-                    show = JSON.parse(json_str)
-                    self.state = show['status']['summary']
-                  end
-                rescue RestClient::ExceptionWithResponse => e
-                  # TODO: Do I want to catch errors here, or let it fall through and
-                  # let the next pump retry?
-                  self.errors << "Failed to check operation status\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
-                end
+                get_operation_summary_set_as_state(suite,template)
               when 'completed','failed'
                 if self.options[:state] == self.state
                   self.result = 'SUCCESS'
@@ -132,6 +120,8 @@ module RightScaleSelfService
                   end
                 end
                 false
+              when 'not_started'
+                get_operation_summary_set_as_state(suite,template)
               else
               end
             elsif template.state == 'failed'
@@ -148,6 +138,26 @@ module RightScaleSelfService
             self.errors << "Unknown test case type (:#{self.type})"
             false
           end
+        end
+      end
+
+      private
+
+      def get_operation_summary_set_as_state(suite,template)
+        begin
+          operation_id = RightScaleSelfService::Api::Client.get_resource_id_from_href(self.api_responses[:operation_create].headers[:location])
+          if operation_id
+            self.api_responses[:operation_show] = suite.api_client.manager.operation.show(:id => operation_id)
+            json_str = self.api_responses[:operation_show].body
+            show = JSON.parse(json_str)
+            self.state = show['status']['summary']
+          end
+          true
+        rescue RestClient::ExceptionWithResponse => e
+          # TODO: Do I want to catch errors here, or let it fall through and
+          # let the next pump retry?
+          self.errors << "Failed to check operation status\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+          false
         end
       end
     end

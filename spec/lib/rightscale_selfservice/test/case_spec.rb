@@ -332,6 +332,23 @@ describe RightScaleSelfService::Test::Case do
           end
         end
 
+        context "case state is not_started" do
+          it "checks the operation summary and sets it as the case state" do
+            operation_mock = flexmock('operation')
+            operation_mock.should_receive(:show).once.and_return(flexmock(:body => '{"status": {"summary": "foobarbaz"}}'))
+            client_mock = flexmock(:manager => flexmock(:operation => operation_mock))
+            suite = flexmock('suite')
+            suite.should_receive(:api_client).and_return(client_mock)
+            template = flexmock('template')
+            template.should_receive(:state).and_return("running")
+            test_case = RightScaleSelfService::Test::Case.new(:operation)
+            test_case.api_responses[:operation_create] = flexmock(:headers => {:location => "/12345"})
+            test_case.state = "not_started"
+            test_case.pump(suite, template)
+            expect(test_case.state).to match 'foobarbaz'
+          end
+        end
+
         context "case state is completed or failed" do
           context "execution_state is matched" do
             it "returns false" do
