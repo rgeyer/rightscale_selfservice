@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |gem|
   gem.name = "rightscale_selfservice"
-  gem.version = "0.0.5"
+  gem.version = "0.0.6"
   gem.homepage = "https://github.com/rgeyer/rightscale_selfservice"
   gem.license = "MIT"
   gem.summary = %q{A rubygem with a buncha useful CLI bits for RightScale Self Service, including a test harness for Cloud Application Templates}
