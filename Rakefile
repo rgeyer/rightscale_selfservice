@@ -10,6 +10,7 @@ rescue Bundler::BundlerError => e
 end
 
 require 'rake'
+require 'logger'
 require 'rake/clean'
 require 'rest-client'
 require 'rubygems/package_task'
@@ -53,6 +54,7 @@ end
 
 desc "Scrapes the current API docs to determine the current interface and put it in a json file"
 task :update_interface_json do
+  log = Logger.new(STDOUT)
   base_url = "https://s3.amazonaws.com/rs_api_docs/selfservice"
   services = ["catalog","designer","manager"]
   hashything = {:services => Hash[services.map{|s| [s, {}]}]}
@@ -61,9 +63,11 @@ task :update_interface_json do
       :method => :get,
       :url => "#{base_url}/#{service}/docs/index.json"
     )
+    log.info("[#{service}] - Fetching service documentation from URI #{service_req.url}")
     service_resp = service_req.execute
     service_hash = JSON.parse(service_resp.body)
     service_hash.each do |service_version,service_value_hash|
+      log.info("[#{service}] - Processing version #{service_version}")
       service_value_hash = Hash[service_value_hash.map {|k,v| [to_camel_case(k),v]}]
       hashything[:services][service][service_version] = service_value_hash
       service_value_hash.each do |k,v|
@@ -73,6 +77,7 @@ task :update_interface_json do
             :method => :get,
             :url => "#{base_url}/#{service}/docs/#{service_version}/resources/#{v["controller"]}.json"
           )
+          log.info("[#{service}::#{v["controller"]}] - Fetching controller documentation from URI #{resource_req.url}")
           resource_resp = resource_req.execute
           resource_hash = JSON.parse(resource_resp.body)
           resource_hash.merge!(:name => k)
@@ -85,6 +90,7 @@ task :update_interface_json do
             :method => :get,
             :url => "#{base_url}/#{service}/docs/#{service_version}/types/#{v[key]}.json"
           )
+          log.info("[#{service}::#{v[key]}] - Fetching MediaType documentation from URI #{type_req.url}")
           type_resp = type_req.execute
           type_hash = JSON.parse(type_resp.body)
           hashything[:services][service][service_version][camel_case_resource][key] = type_hash
