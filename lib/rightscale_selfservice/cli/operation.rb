@@ -42,6 +42,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to create operation \"#{operation_name}\" on execution id \"#{execution_id}\"\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         end
       end
 
@@ -68,6 +69,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to list operations\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         end
       end
     end

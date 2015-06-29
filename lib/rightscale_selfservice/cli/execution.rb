@@ -41,6 +41,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to list executions\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         end
       end
 
@@ -62,6 +63,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to show execution id #{id}\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         end
       end
 

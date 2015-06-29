@@ -53,6 +53,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to compile template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         end
       end
 
@@ -94,6 +95,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to update or create template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         ensure
           tmpfile.close!()
         end
@@ -128,10 +130,12 @@ module RightScaleSelfService
             rescue RestClient::ExceptionWithResponse => e
               message = "Failed to get a list of existing published templates\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
               logger.error(shell.set_color message, :red)
+              exit 1
             end
           else
             message = "Failed to publish template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
             logger.error(shell.set_color message, :red)
+            exit 1
           end
         end
       end
@@ -153,6 +157,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to list templates\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         end
       end
 
@@ -178,6 +183,7 @@ module RightScaleSelfService
           shell = Thor::Shell::Color.new
           message = "Failed to create execution from template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
           logger.error(shell.set_color message, :red)
+          exit 1
         end
       end
 
