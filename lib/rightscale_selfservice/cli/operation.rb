@@ -46,7 +46,7 @@ module RightScaleSelfService
       end
 
       desc "list", "Lists all operations, optionally filtered by --filter and/or --property"
-      option :filter, :type => :array, :desc => "Filters to apply see (https://s3.amazonaws.com/rs_api_docs/selfservice/manager/index.html#/1.0/controller/V1::Controller::Operation/index)"
+      option :filter, :type => :array, :desc => "Filters to apply see (http://reference.rightscale.com/selfservice/manager/index.html#/1.0/controller/V1::Controller::Operation/index)"
       option :property, :type => :array, :desc => "When supplied, only the specified properties will be displayed. By default the entire response is supplied."
       def list()
         params = {}

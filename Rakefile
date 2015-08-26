@@ -55,7 +55,7 @@ end
 desc "Scrapes the current API docs to determine the current interface and put it in a json file"
 task :update_interface_json do
   log = Logger.new(STDOUT)
-  base_url = "https://s3.amazonaws.com/rs_api_docs/selfservice"
+  base_url = "http://reference.rightscale.com/selfservice"
   services = ["catalog","designer","manager"]
   hashything = {:services => Hash[services.map{|s| [s, {}]}]}
   services.each do |service|
