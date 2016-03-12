@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Ryan Geyer
+# Copyright (c) 2014-2016 Ryan Geyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -30,7 +30,7 @@ module RightScaleSelfService
       # @raise [Errno::ENOENT] If the file does not exist
       # @return [String] the content of the supplied file
       def self.file_to_str_and_validate(file)
-        cat_str = File.open(File.expand_path(file), 'r') { |f| f.read }
+        cat_str = File.open(File.expand_path(file), 'r') { |f| f.read.force_encoding('UTF-8') }
       end
 
       # Returns a de duped hash of files to include by recursively parsing and

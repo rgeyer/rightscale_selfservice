@@ -9,4 +9,5 @@ group :development do
   gem "bundler", ">= 0"
   gem "rspec", "~> 3.1.0"
   gem "flexmock"
+  gem "test-unit"
 end

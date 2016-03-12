@@ -1,4 +1,4 @@
-# Copyright (c) 2014 Ryan Geyer
+# Copyright (c) 2014-2016 Ryan Geyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal in
@@ -65,9 +65,16 @@ module RightScaleSelfService
         template = RightScaleSelfService::Utilities::Template.preprocess(source_filepath)
         client = get_api_client()
 
-        matches = template.match(/^name\s*"(?<name>.*)"/)
-        tmp_file = matches["name"].gsub("/","-").gsub(" ","-")
-        name = matches["name"]
+        matches = template.match(/^name\s*['"](?<name>.*)['"]/)
+        if matches && matches.names.include?("name")
+          tmp_file = matches["name"].gsub("/","-").gsub(" ","-")
+          name = matches["name"]
+        else
+          shell = Thor::Shell::Color.new
+          message = "Unable to find the \"name\" property of the CAT. Make sure you have added the necessary header to your CAT file."
+          logger.error(shell.set_color message, :red)
+          return
+        end
 
         logger.info("Fetching a list of existing templates to see if \"#{name}\" exists...")
 
