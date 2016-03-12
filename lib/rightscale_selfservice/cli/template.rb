@@ -122,22 +122,26 @@ module RightScaleSelfService
           response = client.designer.template.publish(publish_params)
           logger.info("Successfully published template.")
         rescue RestClient::ExceptionWithResponse => e
-          if e.http_code == 409 && @options["override"]
-            logger.warn("Template id \"#{template_id}\" has already been published, but --override was set so we'll try to publish again with the overridden_application_href parameter.")
-            begin
-              app_response = client.catalog.application.index()
-              applications = JSON.parse(app_response.body)
-              matching_apps = applications.select{|a| a["template_info"]["href"] == template_href}
-              if matching_apps == 0
-                logger.error(shell.set_color "Unable to find the published application for template id \"#{template_id}\"")
-              else
-                publish_params[:overridden_application_href] = matching_apps.first["href"]
-                retry
+          if e.http_code == 409
+            if @options["override"]
+              logger.warn("Template id \"#{template_id}\" has already been published, but --override was set so we'll try to publish again with the overridden_application_href parameter.")
+              begin
+                app_response = client.catalog.application.index()
+                applications = JSON.parse(app_response.body)
+                matching_apps = applications.select{|a| a["template_info"]["href"] == template_href}
+                if matching_apps == 0
+                  logger.error(shell.set_color "Unable to find the published application for template id \"#{template_id}\"")
+                else
+                  publish_params[:overridden_application_href] = matching_apps.first["href"]
+                  retry
+                end
+              rescue RestClient::ExceptionWithResponse => e
+                message = "Failed to get a list of existing published templates\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
+                logger.error(shell.set_color message, :red)
+                exit 1
               end
-            rescue RestClient::ExceptionWithResponse => e
-              message = "Failed to get a list of existing published templates\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
-              logger.error(shell.set_color message, :red)
-              exit 1
+            else
+              logger.error("Template id \"#{template_id}\" has already been published, and --override was not set so it will not be over written. If you really want to replace the published template, simply specify --override when running this command.")
             end
           else
             message = "Failed to publish template\n\n#{RightScaleSelfService::Api::Client.format_error(e)}"
